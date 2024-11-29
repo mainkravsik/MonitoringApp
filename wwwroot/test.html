@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring Notifications</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .service-status {
+            margin: 10px;
+        }
+
+        .online {
+            color: green;
+        }
+
+        .offline {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Monitoring Notifications</h1>
+    <div id="serviceStatusList">
+        <!-- Статусы сервисов будут отображаться здесь -->
+    </div>
+
+    <script>
+        // Функция для получения статусов сервисов
+        async function getServiceStatus() {
+            try {
+                // Получаем данные о статусах сервисов с API
+                const response = await fetch('https://localhost:7274/api/monitoring/status'); // Убедись, что этот путь правильный
+                const data = await response.json();
+
+                // Обрабатываем и отображаем каждый сервис
+                const serviceStatusList = document.getElementById('serviceStatusList');
+                serviceStatusList.innerHTML = ''; // Очищаем перед добавлением новых данных
+
+                data.forEach(service => {
+                    // Проверяем, что имя сервиса не undefined
+                    const serviceName = service.name || 'Unknown Service'; // Если name undefined, ставим 'Unknown Service'
+                    const statusClass = service.isOnline ? 'online' : 'offline';
+                    const statusText = service.isOnline ? 'Online' : 'Offline';
+                    const lastChecked = new Date(service.lastChecked).toLocaleString(); // Форматируем дату
+
+                    // Создаем элемент для каждого сервиса
+                    const serviceElement = document.createElement('div');
+                    serviceElement.classList.add('service-status');
+                    serviceElement.innerHTML = `
+                            <strong class="${statusClass}">${serviceName} is ${statusText}</strong>
+                            (Last Checked: ${lastChecked})
+                        `;
+                    serviceStatusList.appendChild(serviceElement);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                // В случае ошибки показываем сообщение
+                const serviceStatusList = document.getElementById('serviceStatusList');
+                serviceStatusList.innerHTML = '<div class="offline">Failed to fetch service statuses.</div>';
+            }
+        }
+
+        // Вызываем функцию при загрузке страницы
+        getServiceStatus();
+
+        // Можно добавить автозапрос через интервал, например, каждую минуту
+        setInterval(getServiceStatus, 1000); // Обновление каждую минуту
+    </script>
+</body>
+</html>
